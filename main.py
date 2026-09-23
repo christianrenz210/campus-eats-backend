@@ -22,12 +22,14 @@ from __future__ import annotations
 
 import asyncio
 import itertools
+import os
 import uuid
 from datetime import datetime, timezone
 from typing import Annotated, Literal
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 # --------------------------------------------------------------------------
@@ -52,6 +54,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Dish photos from Wikimedia Commons, served locally so a menu page never
+# hits Wikimedia's rate limit. See static/food/CREDITS.md for attribution.
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+# Render sets RENDER_EXTERNAL_URL; locally we fall back to the dev server.
+PUBLIC_URL = os.environ.get("PUBLIC_URL") or os.environ.get("RENDER_EXTERNAL_URL") or "http://localhost:8000"
 
 
 # --------------------------------------------------------------------------
@@ -131,7 +141,7 @@ class ApiError(BaseModel):
 # --------------------------------------------------------------------------
 
 def _photo(seed: str) -> str:
-    return f"https://picsum.photos/seed/{seed}/480/320"
+    return f"{PUBLIC_URL.rstrip('/')}/static/food/{seed}.jpg"
 
 
 SEED_MENU: list[MenuItem] = [

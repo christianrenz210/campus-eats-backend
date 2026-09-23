@@ -3,3 +3,5 @@ __pycache__/
 .campuseatsenv/
 *.egg-info/
 .env
+
+.venv/
